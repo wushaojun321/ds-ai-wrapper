@@ -1,0 +1,15 @@
+.DS_Store
+.obsidian/
+.claude/*
+!.claude/skills/
+.claude-internal/
+__pycache__
+
+.env
+.envrc
+log/
+sessions.json
+
+.idea
+.envrc
+.memsearch/
