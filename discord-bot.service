@@ -10,6 +10,8 @@ Restart=on-failure
 RestartSec=10
 EnvironmentFile=__SCRIPT_DIR__/.env
 Environment=HOME=__HOME__
+Environment=CONDA_PREFIX=__CONDA_DIR__
+Environment=CONDA_DEFAULT_ENV=__CONDA_DIR__
 Environment=PATH=__EXTRA_PATH__:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 StandardOutput=journal+console
 StandardError=journal+console

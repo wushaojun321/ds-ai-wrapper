@@ -25,7 +25,7 @@ if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV_DIR="$SCRIPT_DIR/venv"
+CONDA_DIR="$SCRIPT_DIR/.conda"
 SERVICE_TEMPLATE="$SCRIPT_DIR/discord-bot.service"
 SERVICE_NAME="discord-bot"
 USER_SERVICE_DIR="$HOME/.config/systemd/user"
@@ -65,25 +65,29 @@ done
 
 info "额外 PATH: $EXTRA_PATHS"
 
-# ---------- 1. 创建 venv & 安装依赖 ----------
-info "创建 Python 虚拟环境..."
-if [[ ! -d "$VENV_DIR" ]]; then
-    python3 -m venv "$VENV_DIR"
-    info "venv 创建完成: $VENV_DIR"
-else
-    info "venv 已存在，跳过创建"
+# ---------- 1. 检查 conda 环境 & 安装依赖 ----------
+info "检查 conda 环境..."
+if [[ ! -d "$CONDA_DIR" ]]; then
+    error "conda 环境不存在: $CONDA_DIR，请先创建 conda 环境"
 fi
 
-PYTHON_BIN="$VENV_DIR/bin/python"
-PIP_BIN="$VENV_DIR/bin/pip"
+PYTHON_BIN="$CONDA_DIR/bin/python"
+PIP_BIN="$CONDA_DIR/bin/pip"
+
+if [[ ! -x "$PYTHON_BIN" ]]; then
+    error "conda 环境中未找到 python: $PYTHON_BIN"
+fi
+
+info "使用 conda 环境: $CONDA_DIR"
+info "Python: $($PYTHON_BIN --version)"
 
 info "安装 Python 依赖..."
 "$PIP_BIN" install -r "$SCRIPT_DIR/requirements.txt" --quiet
 info "依赖安装完成"
 
-# 将 venv Python 加到 PATH 最前面
-VENV_BIN="$VENV_DIR/bin"
-EXTRA_PATHS="${VENV_BIN}${EXTRA_PATHS:+:$EXTRA_PATHS}"
+# 将 conda 环境 bin 加到 PATH 最前面
+CONDA_BIN="$CONDA_DIR/bin"
+EXTRA_PATHS="${CONDA_BIN}${EXTRA_PATHS:+:$EXTRA_PATHS}"
 
 # ---------- 2. 检查 .env ----------
 ENV_FILE="$SCRIPT_DIR/.env"
@@ -113,6 +117,7 @@ sed \
     -e "s|__SCRIPT_DIR__|${SCRIPT_DIR}|g" \
     -e "s|__PYTHON__|${PYTHON_BIN}|g" \
     -e "s|__HOME__|${HOME}|g" \
+    -e "s|__CONDA_DIR__|${CONDA_DIR}|g" \
     -e "s|__EXTRA_PATH__|${EXTRA_PATHS}|g" \
     "$SERVICE_TEMPLATE" > "$SERVICE_DEST"
 

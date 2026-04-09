@@ -13,3 +13,4 @@ sessions.json
 .idea
 .envrc
 .memsearch/
+.conda
