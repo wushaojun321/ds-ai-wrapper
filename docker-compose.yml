@@ -1,0 +1,35 @@
+# Layout on the host (paths configurable in .env):
+#   $WORKSPACES_DIR/ds-ai-wrapper   <- this repo (bot code + .env)
+#   $WORKSPACES_DIR/<other repos>   <- one per Discord channel
+#   $DATA_DIR_HOST                  <- sessions, logs, pi home
+#   $MIHOMO_DIR/config.yaml         <- Clash/mihomo config (for Discord + GitHub)
+services:
+  bot:
+    build: .
+    image: ds-ai-wrapper:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      BASE_DIR: /workspaces
+      DATA_DIR: /data
+    volumes:
+      - ${WORKSPACES_DIR:-..}:/workspaces
+      - ${DATA_DIR_HOST:-../../data}:/data
+      - ${DATA_DIR_HOST:-../../data}/pi-home:/root/.pi
+    depends_on:
+      - mihomo
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  mihomo:
+    image: metacubex/mihomo:latest
+    restart: unless-stopped
+    volumes:
+      - ${MIHOMO_DIR:-../../mihomo}:/root/.config/mihomo
+    # Only exposed on the docker network; publish to 127.0.0.1 for host use
+    ports:
+      - "127.0.0.1:7890:7890"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }

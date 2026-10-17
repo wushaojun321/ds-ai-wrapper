@@ -55,7 +55,7 @@ class WorkspaceManager:
 
         Priority:
           1. Manual override (from /workspace bind)
-          2. AUTO: BASE_DIR / channel_name
+          2. AUTO: BASE_DIR / channel_name (case-insensitive match on existing dirs)
 
         Creates the directory if it doesn't exist.
         """
@@ -63,6 +63,12 @@ class WorkspaceManager:
             path = Path(self._overrides[channel_id])
         else:
             path = self._base_dir / channel_name
+            if not path.exists() and self._base_dir.is_dir():
+                # Discord channel names are lowercase: #sixdad -> BASE_DIR/SixDad
+                for d in self._base_dir.iterdir():
+                    if d.is_dir() and d.name.lower() == channel_name.lower():
+                        path = d
+                        break
         path.mkdir(parents=True, exist_ok=True)
         return str(path)
 

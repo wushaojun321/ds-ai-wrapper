@@ -1,8 +1,8 @@
 """Utility slash commands: /help /back /sessions /workspace /pull /push /messages /purge /restart."""
 
 import asyncio
-import json
 import logging
+import os
 from pathlib import Path
 
 import discord
@@ -113,13 +113,16 @@ class CustomCommands(commands.Cog):
         )
 
         embed.add_field(
-            name="🤖 Claude 命令",
+            name="🤖 Agent 命令",
             value=(
                 "`/new [question]` — 新建会话（可附带问题）\n"
                 "`/clear [question]` — 清空会话重新开始（同 /new）\n"
                 "`/continue [question]` — 继续最近会话\n"
                 "`/resume <session_id> [question]` — 恢复指定会话\n"
                 "`/fork <question>` — Fork 当前会话为新分支\n"
+                "`/stop` — 停止正在运行的任务（也可点消息上的 ⏹）\n"
+                "`/model` — 切换模型（默认 DeepSeek V4.1 Flash）\n"
+                "`/thinking` — 设置思考深度\n"
             ),
             inline=False,
         )
@@ -145,19 +148,19 @@ class CustomCommands(commands.Cog):
                 "`/purge [count]` — 删除频道聊天记录\n"
                 "`/pull` — 执行 git pull\n"
                 "`/push` — 执行 git push\n"
-                "`/restart` — 重启Discord Bot服务\n"
+                "`/restart` — 重启 Bot（容器自动拉起）\n"
             ),
             inline=False,
         )
 
         embed.add_field(
             name="💬 普通对话",
-            value="直接发送消息即可与 Claude 对话，无需任何前缀。\n"
+            value="直接发送消息即可与 Agent 对话，可附带图片/文件。\n"
                   "每个频道自动映射到 `BASE_DIR/频道名` 作为工作目录。",
             inline=False,
         )
 
-        embed.set_footer(text="Powered by claude-internal CLI")
+        embed.set_footer(text=f"Powered by pi · {self.bot.agent.default_model}")
         await interaction.response.send_message(embed=embed)
 
     # ------------------------------------------------------------------
@@ -191,10 +194,7 @@ class CustomCommands(commands.Cog):
         channel_id = interaction.channel_id
         sm = self.bot.session_manager
 
-        history_file = Path.home() / ".claude-internal" / "history.jsonl"
-        repo_path = self._cwd(interaction)
-
-        sessions = sm.list_recent_sessions(history_file, repo_path, limit=75)
+        sessions = self.bot.agent.list_sessions(self._cwd(interaction), limit=75)
 
         if not sessions:
             stack = sm.get_stack(channel_id)
@@ -286,65 +286,17 @@ class CustomCommands(commands.Cog):
 
         await interaction.response.defer(ephemeral=True)
 
-        repo_path = Path(self._cwd(interaction))
-        project_dir_name = str(repo_path).replace("/", "-")
-        session_file = Path.home() / ".claude-internal" / "projects" / project_dir_name / f"{current_sid}.jsonl"
-
-        if not session_file.exists():
+        history = self.bot.agent.read_messages(self._cwd(interaction), current_sid)
+        if history is None:
             await interaction.followup.send(f"❌ 找不到会话文件: `{current_sid[:8]}…`", ephemeral=True)
             return
 
         messages = []
-        try:
-            with open(session_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        entry = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
-
-                    if entry.get("type") == "user" and not entry.get("isMeta"):
-                        msg = entry.get("message", {})
-                        content = msg.get("content", "")
-                        if isinstance(content, str):
-                            text = content
-                        elif isinstance(content, list):
-                            text = ""
-                            for block in content:
-                                if isinstance(block, str):
-                                    text = block
-                                    break
-                                elif isinstance(block, dict) and block.get("type") == "text":
-                                    text = block.get("text", "")
-                                    break
-                        else:
-                            text = ""
-
-                        if text.strip():
-                            messages.append(f"👤 **用户**: {text.strip()}")
-
-                    elif entry.get("type") == "assistant":
-                        msg = entry.get("message", {})
-                        content = msg.get("content", [])
-                        text_parts = []
-                        for block in content:
-                            if isinstance(block, dict) and block.get("type") == "text":
-                                text_parts.append(block.get("text", ""))
-
-                        if text_parts:
-                            full_text = " ".join(text_parts).strip()
-                            if full_text:
-                                if len(full_text) > 500:
-                                    full_text = full_text[:500] + "…"
-                                messages.append(f"🤖 **Claude**: {full_text}")
-
-        except Exception as e:
-            logger.error("Failed to read session file %s: %s", session_file, e)
-            await interaction.followup.send(f"❌ 读取会话历史失败: {e}", ephemeral=True)
-            return
+        for role, text in history:
+            if role == "user":
+                messages.append(f"👤 **用户**: {text[:300]}")
+            else:
+                messages.append(f"🤖 **Agent**: {text[:500] + '…' if len(text) > 500 else text}")
 
         recent_messages = messages[-count:] if messages else []
 
@@ -354,7 +306,7 @@ class CustomCommands(commands.Cog):
 
         embed = discord.Embed(
             title=f"💬 会话消息历史 (最新 {len(recent_messages)} 条)",
-            description="\n\n".join(recent_messages),
+            description="\n\n".join(recent_messages)[-4000:],
             color=discord.Color.green(),
         )
         embed.set_footer(text=f"会话ID: {current_sid[:8]}…")
@@ -418,43 +370,11 @@ class CustomCommands(commands.Cog):
 
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-        try:
-            embed_restart = discord.Embed(
-                title="🔄 正在执行重启...",
-                description="```bash\nsystemctl --user restart discord-bot\n```",
-                color=discord.Color.green(),
-            )
-            await interaction.channel.send(embed=embed_restart)
-
-            proc_restart = await asyncio.create_subprocess_exec(
-                "systemctl", "--user", "restart", "discord-bot",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout_restart, stderr_restart = await proc_restart.communicate()
-
-            if proc_restart.returncode == 0:
-                embed_result = discord.Embed(
-                    title="✅ 重启命令已执行",
-                    description="Discord Bot服务正在重启中...",
-                    color=discord.Color.green(),
-                )
-            else:
-                error_msg = stderr_restart.decode().strip() or "未知错误"
-                embed_result = discord.Embed(
-                    title="❌ 重启失败",
-                    description=f"错误信息: {error_msg}",
-                    color=discord.Color.red(),
-                )
-            await interaction.channel.send(embed=embed_result)
-
-        except Exception as e:
-            embed_error = discord.Embed(
-                title="❌ 重启执行失败",
-                description=f"错误: {e}",
-                color=discord.Color.red(),
-            )
-            await interaction.channel.send(embed=embed_error)
+        await interaction.channel.send("🔄 正在重启，稍等几秒…")
+        logger.info("Restart requested via /restart")
+        # Exit and let the container restart policy bring the bot back
+        await self.bot.close()
+        os._exit(0)
 
 
 async def setup(bot):

@@ -1,0 +1,7 @@
+.git
+.conda
+.env
+log
+__pycache__
+*.json
+!requirements.txt

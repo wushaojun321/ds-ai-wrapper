@@ -14,3 +14,6 @@ sessions.json
 .envrc
 .memsearch/
 .conda
+workspaces.json
+.pi/
+channel_settings.json
