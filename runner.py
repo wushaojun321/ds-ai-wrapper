@@ -18,7 +18,12 @@ EDIT_INTERVAL = 1.5  # seconds between progress edits (Discord rate limits edits
 MAX_ATTACHMENT = 5 * 1024 * 1024
 UPLOAD_DIR = Path(tempfile.gettempdir()) / "dsbot-uploads"
 
-TOOL_ICONS = {"bash": "💻", "read": "📖", "edit": "✏️", "write": "📝", "grep": "🔍", "find": "🔍", "ls": "📂"}
+TOOL_ICONS = {
+    "bash": "💻", "read": "📖", "write": "📝", "grep": "🔍", "find": "🔍", "ls": "📂",
+    "edit": "✏️", "replace": "✏️", "replace_match": "✏️", "insert": "✏️",
+    "copy": "📋", "move": "📦", "undo_last_change": "↩️",
+    "web_search": "🌐", "fetch_content": "🌐", "get_search_content": "🌐", "source_check": "🌐",
+}
 
 
 def split_message(text: str) -> list[str]:

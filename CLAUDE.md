@@ -16,4 +16,5 @@
 - 子进程必须 `stdin=DEVNULL`，否则 pi 会一直等 stdin 卡住；stdout 行可能很大（`agent_end` 带整轮消息），StreamReader `limit` 要调大。
 - pi 会话按工作目录分目录存放在 `DATA_DIR/pi-sessions/<cwd-slug>/`，文件名 `<时间>_<session-id>.jsonl`。
 - 网络：模型 API 直连（子进程会清掉代理环境变量），只有 Discord（`DISCORD_PROXY`）和 github.com（`GIT_PROXY`）走代理。
+- pi 插件在容器内用 `pi install npm:<包>@<版本>` 安装（固定版本），落在 `DATA_DIR_HOST/pi-home`（挂载为 `/root/.pi`），重建镜像不丢；新插件带来新工具名时，同步更新 `runner.py` 的 `TOOL_ICONS`。
 - 部署用 docker compose；bot 代码以 bind mount 方式挂载（本仓库同时也是一个工作区），改代码后 `/restart` 即生效，改依赖才需要 `--build`。

@@ -58,10 +58,10 @@ def summarize_args(tool: str, args: dict) -> str:
     """Short one-line description of a tool call."""
     if not isinstance(args, dict):
         return ""
-    if tool == "bash":
-        s = args.get("command", "")
-    elif tool in ("read", "edit", "write"):
-        s = args.get("path") or args.get("file_path") or ""
+    for key in ("command", "path", "file_path", "query", "url", "pattern"):
+        if args.get(key):
+            s = args[key]
+            break
     else:
         s = json.dumps(args, ensure_ascii=False)
     s = " ".join(str(s).split())
