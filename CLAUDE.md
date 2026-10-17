@@ -9,3 +9,11 @@
 - 运行时数据（`sessions.json`、`workspaces.json`、`log/`、agent 会话目录）不入库，新增此类文件时同步更新 `.gitignore`。
 - 代码注释、README、示例、commit message 里同样不能出现上述信息，用通用示例代替。
 - 提交前自查：`git diff --cached | grep -nE 'sk-|[0-9]{1,3}(\.[0-9]{1,3}){3}|/Users/|/home/'`。
+
+## 架构要点
+
+- Agent 是 [pi](https://pi.dev)，以 `pi -p --mode json` 子进程方式调用（`pi_agent.py`），解析 JSONL 事件流驱动 Discord 实时进度（`runner.py`）。
+- 子进程必须 `stdin=DEVNULL`，否则 pi 会一直等 stdin 卡住；stdout 行可能很大（`agent_end` 带整轮消息），StreamReader `limit` 要调大。
+- pi 会话按工作目录分目录存放在 `DATA_DIR/pi-sessions/<cwd-slug>/`，文件名 `<时间>_<session-id>.jsonl`。
+- 网络：模型 API 直连（子进程会清掉代理环境变量），只有 Discord（`DISCORD_PROXY`）和 github.com（`GIT_PROXY`）走代理。
+- 部署用 docker compose；bot 代码以 bind mount 方式挂载（本仓库同时也是一个工作区），改代码后 `/restart` 即生效，改依赖才需要 `--build`。
