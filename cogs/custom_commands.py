@@ -121,7 +121,7 @@ class CustomCommands(commands.Cog):
                 "`/resume <session_id> [question]` — 恢复指定会话\n"
                 "`/fork <question>` — Fork 当前会话为新分支\n"
                 "`/stop` — 停止正在运行的任务（也可点消息上的 ⏹）\n"
-                "`/model` — 切换模型（默认 DeepSeek V4.1 Flash）\n"
+                "`/model` — 切换模型（默认 DeepSeek V4.1 Flash 1017）\n"
                 "`/thinking` — 设置思考深度\n"
             ),
             inline=False,

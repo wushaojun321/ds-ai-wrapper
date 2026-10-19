@@ -65,7 +65,7 @@ python bot.py
 | `DISCORD_GUILD_ID` | 可选，只响应该服务器，并加速命令同步 |
 | `DISCORD_PROXY` | 可选，仅 Discord 连接使用的代理，如 `http://mihomo:7890` |
 | `OPENROUTER_API_KEY` | ✅（用 OpenRouter 时）pi 也支持其他 provider 对应的 key |
-| `PI_PROVIDER` / `PI_MODEL` | 默认 `openrouter` / `deepseek/deepseek-v4.1-flash` |
+| `PI_PROVIDER` / `PI_MODEL` | 默认 `openrouter` / `deepseek/deepseek-v4.1-flash-1017` |
 | `PI_THINKING` | 可选默认思考深度：`off` `low` `medium` `high` |
 | `COMMAND_TIMEOUT` | 单次任务最长秒数（默认 `1800`）|
 | `GITHUB_TOKEN` / `GIT_PROXY` / `GIT_USER_NAME` / `GIT_USER_EMAIL` | 可选，容器内 git 的凭据、代理（只对 github.com 生效）和身份 |

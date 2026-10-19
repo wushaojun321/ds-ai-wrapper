@@ -9,7 +9,8 @@ from discord.ext import commands
 logger = logging.getLogger("discord_bot")
 
 MODEL_CHOICES = [
-    app_commands.Choice(name="DeepSeek V4.1 Flash（默认，快且便宜，能看图）", value="deepseek/deepseek-v4.1-flash"),
+    app_commands.Choice(name="DeepSeek V4.1 Flash 1017（默认，能看图）", value="deepseek/deepseek-v4.1-flash-1017"),
+    app_commands.Choice(name="DeepSeek V4.1 Flash 旧版（更便宜）", value="deepseek/deepseek-v4.1-flash"),
     app_commands.Choice(name="DeepSeek V4 Pro（复杂任务）", value="deepseek/deepseek-v4-pro"),
     app_commands.Choice(name="恢复默认", value="default"),
 ]

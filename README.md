@@ -65,7 +65,7 @@ python bot.py
 | `DISCORD_GUILD_ID` | Optional; respond only in this guild and sync commands faster |
 | `DISCORD_PROXY` | Optional proxy for the Discord connection only, e.g. `http://mihomo:7890` |
 | `OPENROUTER_API_KEY` | ✅ when using OpenRouter (pi supports other providers' keys too) |
-| `PI_PROVIDER` / `PI_MODEL` | Default `openrouter` / `deepseek/deepseek-v4.1-flash` |
+| `PI_PROVIDER` / `PI_MODEL` | Default `openrouter` / `deepseek/deepseek-v4.1-flash-1017` |
 | `PI_THINKING` | Optional default thinking level: `off` `low` `medium` `high` |
 | `COMMAND_TIMEOUT` | Max seconds per run (default `1800`) |
 | `GITHUB_TOKEN` / `GIT_PROXY` / `GIT_USER_NAME` / `GIT_USER_EMAIL` | Optional git credentials, proxy (github.com only) and identity inside the container |

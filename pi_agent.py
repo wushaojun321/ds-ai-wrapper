@@ -14,7 +14,7 @@ logger = logging.getLogger("discord_bot")
 
 PI_CMD = os.getenv("PI_CMD", "pi")
 PI_PROVIDER = os.getenv("PI_PROVIDER", "openrouter")
-PI_MODEL = os.getenv("PI_MODEL", "deepseek/deepseek-v4.1-flash")
+PI_MODEL = os.getenv("PI_MODEL", "deepseek/deepseek-v4.1-flash-1017")
 PI_THINKING = os.getenv("PI_THINKING", "")  # empty = pi default
 COMMAND_TIMEOUT = int(os.getenv("COMMAND_TIMEOUT", "1800"))
 

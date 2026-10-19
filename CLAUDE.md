@@ -17,4 +17,5 @@
 - pi 会话按工作目录分目录存放在 `DATA_DIR/pi-sessions/<cwd-slug>/`，文件名 `<时间>_<session-id>.jsonl`。
 - 网络：模型 API 直连（子进程会清掉代理环境变量），只有 Discord（`DISCORD_PROXY`）和 github.com（`GIT_PROXY`）走代理。
 - pi 插件在容器内用 `pi install npm:<包>@<版本>` 安装（固定版本），落在 `DATA_DIR_HOST/pi-home`（挂载为 `/root/.pi`），重建镜像不丢；新插件带来新工具名时，同步更新 `runner.py` 的 `TOOL_ICONS`。
+- 换成 pi 目录里还没有的新模型时（`pi --list-models` 查不到），要在 `pi-home/agent/models.json` 的对应 provider 下补一条模型（input/contextWindow/maxTokens/cost），否则 pi 按默认元数据跑：不认图片、费用显示不准。
 - 部署用 docker compose；bot 代码以 bind mount 方式挂载（本仓库同时也是一个工作区），改代码后 `/restart` 即生效，改依赖才需要 `--build`。
